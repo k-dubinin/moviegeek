@@ -1,0 +1,181 @@
+{% extends "moviegeek/base.html" %}
+
+{% block head %}
+<script>
+    $(document).ready(function(){
+        $('[data-toggle="popover"]').popover();
+
+        $('.movie').on('show.bs.popover', function () {
+            var contentid;
+            contentid = $(this).attr("id");
+            add_impression({{ user_id }}, 'details', contentid, '{{ session_id }}', '{{ csrf_token }}');
+        });
+    });
+
+    function get_cb_recs(userid) {
+        url = '/rec/cb/user/' + userid + '/'
+        element_name = 'cb_recs'
+        console.log("Fetching CB recommendations for user:", userid);
+        get_recs(url, element_name)
+    }
+
+    function get_cf_recs(userid) {
+        url = '/rec/cf/user/' + userid + '/'
+        element_name = 'cf_recs'
+        console.log("Fetching CF recommendations for user:", userid);
+        get_recs(url, element_name)
+    }
+
+    function get_recs(url, element_name) {
+        $.getJSON(url, function(result) {
+            console.log("Data received from", url, ":", result);
+            if ((result.data != null) && (result.data.length > 0)) {
+                recs = document.getElementById(element_name)
+                recs.style.display = 'block'
+
+                result.data.forEach(function(element, index, array) {
+                    add_movie(element[0], recs)
+                });
+            } else {
+                console.log("No data found for", element_name);
+            }
+        }).fail(function(jqxhr, textStatus, error) {
+            console.error("Request Failed: " + textStatus + ", " + error);
+        });
+    }
+
+    function add_movie(id, recs) {
+        $.getJSON(get_url(id), function(mov) {
+            console.log("Movie data received for ID", id, ":", mov);
+            image_url = 'http://image.tmdb.org/t/p/w500/' + mov.movie_results[0].poster_path
+
+            rec_div = document.createElement('div')
+            rec_div.setAttribute('class', "col-sm-2 img-responsive")
+
+            a = document.createElement('a')
+            a.setAttribute('href', '/movies/movie/' + id)
+
+            img = document.createElement('img')
+            img.setAttribute('src', image_url)
+            img.setAttribute('class',"img-responsive")
+            img.setAttribute('title', mov.movie_results[0].title)
+            a.appendChild(img)
+
+            rec_div.appendChild(a)
+            recs.appendChild(rec_div)
+        }).fail(function(jqxhr, textStatus, error) {
+            console.error("Request Failed: " + textStatus + ", " + error);
+        });
+    }
+
+    function get_association_rule_recs(userid) {
+        url = '/rec/ar/' + userid + '/'
+        console.log("Fetching Association Rule recommendations for user:", userid);
+        $.getJSON(url, function(result) {
+            console.log("Data received from", url, ":", result);
+            if ((result.data != null) && (result.data.length > 0)) {
+                recs = document.getElementById('association_rules_recs')
+                recs.style.display = 'block'
+
+                result.data.forEach(function(element, index, array) {
+                    add_movie(element.id, recs)
+                });
+            } else {
+                console.log("No data found for association rules recommendations");
+            }
+        }).fail(function(jqxhr, textStatus, error) {
+            console.error("Request Failed: " + textStatus + ", " + error);
+        });
+    }
+
+    function getTopContent() {
+        $.getJSON('/rec/chart', function(result) {
+            console.log("Top content data received:", result);
+            var ul = document.getElementById("top_content");
+
+            result.data.forEach(function(element, index, array) {
+                var li = document.createElement("li")
+                li.innerHTML = '<a ' +
+                               'onclick=\'PostRecClicked(\"'
+                               + element.movie_id + '\", \"rec:chart\")\''
+                              + "href='/movies/movie/"+ element.movie_id + "'>"
+                              + (index + 1) + ". "
+                              + element.title + "</a>";
+                ul.appendChild(li)
+            });
+        }).fail(function(jqxhr, textStatus, error) {
+            console.error("Request Failed: " + textStatus + ", " + error);
+        });
+    }
+
+    $(document).on('click', function (e) {
+        $('[data-toggle="popover"],[data-original-title]').each(function () {
+            if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                (($(this).popover('hide').data('bs.popover')||{}).inState||{}).click = false
+            }
+        });
+    });
+
+    getTopContent();
+    get_association_rule_recs({{user_id}})
+    get_cf_recs({{user_id}})
+    get_cb_recs({{user_id}})
+</script>
+{% endblock head %}
+
+{% block content %}
+    <div class="col-xs-8 main max-size">
+        <div id="movies" class="row"></div>
+
+        <div id="association_rules_recs" class="row" style="display: none">
+            <h2>Based on what you and others have bought</h2>
+
+        </div>
+        <div id="cf_recs" class="row" style="display: none">
+            <h2>Users who liked what you like also like</h2>
+
+        </div>
+         <div id="cb_recs" class="row" style="display: none">
+            <h2>Similar Content</h2>
+
+        </div>
+        <div class="row">
+        {% if movies.has_other_pages %}
+        <ul class="pagination">
+            {% if movies.has_previous %}
+                <li><a href="?page={{movies.previous_page_number }}">&laquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&laquo;</span></li>
+            {% endif %}
+            {% for i in pages %}
+                {% if i == movies.number %}
+                    <li class="active">
+                        <span>{{ i }} <span class="sr-only">(current)</span></span>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="?page={{i}}">{{ i}}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            {% if movies.has_next %}
+                <li><a href="?page={{movies.next_page_number}}">&raquo;</a></li>
+            {% else %}
+                <li class="disabled"><span>&raquo;</span></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+        </div>
+    </div>
+    <div id="right" class="col-xs-2">
+        <div class="well">
+            <ol id="top_content" class="nav nav-sidebar"></ol>
+        </div>
+    </div>
+    <script type="text/javascript">
+        getTopContent();
+        get_association_rule_recs({{user_id}})
+        get_cf_recs({{user_id}})
+        get_cb_recs({{user_id}})
+    </script>
+{% endblock content %}

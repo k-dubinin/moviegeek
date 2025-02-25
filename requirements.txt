@@ -1,0 +1,6 @@
+Django
+django-extensions
+gensim
+tqdm
+pandas
+requests
