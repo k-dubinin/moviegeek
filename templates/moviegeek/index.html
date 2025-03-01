@@ -47,7 +47,7 @@
     function add_movie(id, recs) {
         $.getJSON(get_url(id), function(mov) {
             console.log("Movie data received for ID", id, ":", mov);
-            image_url = 'http://image.tmdb.org/t/p/w500/' + mov.movie_results[0].poster_path
+            image_url = mov.Poster
 
             rec_div = document.createElement('div')
             rec_div.setAttribute('class', "col-sm-2 img-responsive")
@@ -88,7 +88,73 @@
         });
     }
 
-    function getTopContent() {
+    function append_to_random_movies(movie_id, title) {
+        url = 'https://www.omdbapi.com?apikey={{ api_key }}&i=tt' + movie_id;
+
+        $.getJSON(url,
+                  function(result) {
+                    console.log("Get random movie: ", result)
+                    if (result != null)
+                    {
+                        img_tag =  document.getElementById('src_' + movie_id)
+                        image_url = result.Poster
+
+                        a = document.createElement("a");
+                        a.setAttribute('href', "/movies/movie/" + movie_id);
+                        a.setAttribute('onclick', "add_impression({{user_id}}, 'more_details', " +
+                                                  movie_id + ", '{{ session_id }}','{{ csrf_token }}')")
+                        a.innerHTML= 'more details'
+
+                        save_for_later_a = document.createElement("a");
+                        save_for_later_a.setAttribute('onclick',
+                         "add_impression({{user_id}}, 'save_for_later', " + movie_id +
+                                          ", '{{ session_id }}','{{ csrf_token }}')")
+                        save_for_later_a.innerHTML = 'save for later';
+
+                        popover_div = '<div style="width: 200px;">' +
+                                      '<strong>released:</strong> ' + result.Released + '<br />' +
+                                      '<strong>language:</strong> ' + result.Language + '<br />' +
+                                      '<strong>avg tweet rating</strong>: '+ result.imdbRating + '<br />' +
+                                      save_for_later_a.outerHTML + '<br />' +
+                                      a.outerHTML +
+                                      '</div>'
+
+
+                        popover_content = 'amazing film <br/>' + a.outerHTML
+
+                        img = document.createElement("img");
+                        img.setAttribute('id', movie_id);
+                        img.setAttribute('class', 'movie img-rounded');
+                        img.setAttribute('src', image_url);
+                        img.setAttribute('style','padding: 0px 0px 0px 0px;height: 150px')
+                        img.setAttribute('title', title);
+
+                        div = document.createElement("div");
+                        div.setAttribute('class', 'col-xs-2');
+                        div.appendChild(img)
+
+                        document.createElement("div");
+
+                        div.setAttribute('onclick', "add_impression({{user_id}}, 'details', "
+                                                 + movie_id
+                                                 + ", '{{ session_id }}','{{ csrf_token }}')")
+
+                        $('#random_movies').append(div)
+
+                        $('#' + movie_id).popover({
+                            html: true,
+                            content: popover_div,
+                            trigger: 'click'
+                        })
+                    }
+                  }
+        )
+      }
+
+
+
+
+      function getTopContent() {
         $.getJSON('/rec/chart', function(result) {
             console.log("Top content data received:", result);
             var ul = document.getElementById("top_content");
@@ -108,6 +174,8 @@
         });
     }
 
+
+
     $(document).on('click', function (e) {
         $('[data-toggle="popover"],[data-original-title]').each(function () {
             if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
@@ -116,16 +184,28 @@
         });
     });
 
+    {% if movies %}
+        {% for movie in movies %}
+            {% if movie.movie_id %}
+                append_to_random_movies('{{movie.movie_id}}', '{{movie.title}}');
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     getTopContent();
     get_association_rule_recs({{user_id}})
     get_cf_recs({{user_id}})
     get_cb_recs({{user_id}})
+
 </script>
+
 {% endblock head %}
 
 {% block content %}
     <div class="col-xs-8 main max-size">
-        <div id="movies" class="row"></div>
+        <div id="random_movies" class="row">
+            <h2>Random movies</h2>
+        </div>
 
         <div id="association_rules_recs" class="row" style="display: none">
             <h2>Based on what you and others have bought</h2>
