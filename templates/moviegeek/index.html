@@ -58,7 +58,7 @@
             img = document.createElement('img')
             img.setAttribute('src', image_url)
             img.setAttribute('class',"img-responsive")
-            img.setAttribute('title', mov.movie_results[0].title)
+            img.setAttribute('title', mov.title)
             a.appendChild(img)
 
             rec_div.appendChild(a)
@@ -191,11 +191,14 @@
             {% endif %}
         {% endfor %}
     {% endif %}
-
+    /*
     getTopContent();
     get_association_rule_recs({{user_id}})
     get_cf_recs({{user_id}})
     get_cb_recs({{user_id}})
+
+    */
+
 
 </script>
 

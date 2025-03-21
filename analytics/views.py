@@ -23,7 +23,7 @@ def user(request, user_id):
     user_ratings = Rating.objects.filter(user_id=user_id).order_by('-rating')
 
     movies = Movie.objects.filter(movie_id__in=user_ratings.values('movie_id'))
-    log = Log.objects.filter(user_id=user_id).order_by('-created').values()[:20]
+    log = Log.objects.filter(user_id=user_id).order_by('-created').values()[:50]
 
     cluster = Cluster.objects.filter(user_id=user_id).first()
     ratings = {r.movie_id: r for r in user_ratings}
@@ -86,7 +86,7 @@ def content(request, content_id):
     movie = Movie.objects.filter(movie_id=content_id).first()
     user_ratings = Rating.objects.filter(movie_id=content_id)
     ratings = user_ratings.values('rating')
-    logs = Log.objects.filter(content_id=content_id).order_by('-created').values()[:20]
+    logs = Log.objects.filter(content_id=content_id).order_by('-created').values()[:50]
     association_rules = SeededRecs.objects.filter(source=content_id).values('target', 'type')
 
     print(content_id, " rat:", ratings)

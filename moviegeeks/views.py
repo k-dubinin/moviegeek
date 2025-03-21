@@ -38,7 +38,7 @@ def index(request):
 
 def handle_pagination(movies, page_number):
 
-    paginate_by = 18
+    paginate_by = 6
 
     paginator = Paginator(movies, paginate_by)
 
@@ -163,4 +163,3 @@ def user_id(request):
 
     print("ensured id: ", request.session['user_id'] )
     return request.session['user_id']
-

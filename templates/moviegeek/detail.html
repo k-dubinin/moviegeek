@@ -70,8 +70,8 @@
         }
 
         function getinfo(movieid) {
-            url = 'https://api.themoviedb.org/3/find/tt' + movieid + '?external_source=imdb_id&api_key={{ api_key }}'
-
+            //url = 'https://api.themoviedb.org/3/find/tt' + movieid + '?external_source=imdb_id&api_key={{ api_key }}'
+            url = 'https://www.omdbapi.com?apikey={{ api_key }}&i=tt' + movieid;
             $.getJSON(url,
                       function(result) {
                         title_div = document.getElementById('title')
