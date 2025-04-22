@@ -17,13 +17,13 @@ urlpatterns = [
     re_path(r'^cb/user/(?P<user_id>\w+)/$',
         views.recs_cb, name='recs_cb'),
     re_path(r'^cf/user/(?P<user_id>\w+)/$',
-        views.recs_cf, name='recs_cb'),
+        views.recs_cf, name='recs_cf'),
     re_path(r'^funk/user/(?P<user_id>\w+)/$',
         views.recs_funksvd, name='recs_funksvd'),
     re_path(r'^fwls/user/(?P<user_id>\w+)/$',
         views.recs_fwls, name='recs_fwls'),
     re_path(r'^bpr/user/(?P<user_id>\w+)/$',
-        views.recs_bpr, name='recs_fwls'),
+        views.recs_bpr, name='recs_bpr'),
     re_path(r'^pop/user/(?P<user_id>\w+)/$',
         views.recs_pop, name='recs_pop')
 ]

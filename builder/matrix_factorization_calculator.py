@@ -129,8 +129,8 @@ class MatrixFactorization(object):
             test_data, train_data = self.split_data(10,
                                                     ratings_df)
             columns = ['user_id', 'movie_id', 'rating']
-            ratings = train_data[columns].as_matrix()
-            test = test_data[columns].as_matrix()
+            ratings = train_data[columns].values
+            test = test_data[columns].values
 
             self.MAX_ITERATIONS = 10
             iterations = 0
@@ -186,7 +186,7 @@ class MatrixFactorization(object):
         self.initialize_factors(ratings_df, k)
         self.logger.info("training matrix factorization at {}".format(datetime.now()))
 
-        ratings = ratings_df[['user_id', 'movie_id', 'rating']].as_matrix()
+        ratings = ratings_df[['user_id', 'movie_id', 'rating']].values
 
         index_randomized = random.sample(range(0, len(ratings)), (len(ratings) - 1))
 
@@ -304,7 +304,7 @@ def load_all_ratings(min_ratings=1):
     user_ids = user_count[user_count['movie_id'] > min_ratings]['user_id']
     ratings = ratings[ratings['user_id'].isin(user_ids)]
 
-    ratings['rating'] = ratings['rating'].astype(Decimal)
+    ratings['rating'] = ratings['rating'].astype(float)
     return ratings
 
 
@@ -319,7 +319,8 @@ if __name__ == '__main__':
     logger = logging.getLogger('funkSVD')
     logger.info("[BEGIN] Calculating matrix factorization")
 
-    MF = MatrixFactorization(save_path='./models/funkSVD/{}/'.format(datetime.now()), max_iterations=40)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    MF = MatrixFactorization(save_path=f'./models/funkSVD/{timestamp}/', max_iterations=40)
     loaded_ratings = load_all_ratings(20)
     logger.info("using {} ratings".format(loaded_ratings.shape[0]))
     #MF.meta_parameter_train(loaded_ratings)
