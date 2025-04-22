@@ -63,8 +63,8 @@ class MatrixFactorization(object):
         ensure_dir(save_path)
 
     def initialize_factors(self, ratings, k=25):
-        self.user_ids = set(ratings['user_id'].values)
-        self.movie_ids = set(ratings['movie_id'].values)
+        self.user_ids = list(ratings['user_id'].unique())
+        self.movie_ids = list(ratings['movie_id'].unique())
         self.item_counts = ratings[['movie_id', 'rating']].groupby('movie_id').count()
         self.item_counts = self.item_counts.reset_index()
 
@@ -103,8 +103,8 @@ class MatrixFactorization(object):
         self.train(ratings, k)
 
     def split_data(self, min_rank, ratings):
-
-        users = self.user_ids
+        users = set(self.user_ids)
+        #users = self.user_ids
 
         train_data_len = int((len(users) * 70 / 100))
         test_users = set(random.sample(users, (len(users) - train_data_len)))
@@ -304,7 +304,7 @@ def load_all_ratings(min_ratings=1):
     user_ids = user_count[user_count['movie_id'] > min_ratings]['user_id']
     ratings = ratings[ratings['user_id'].isin(user_ids)]
 
-    ratings['rating'] = ratings['rating'].astype(float)
+    ratings['rating'] = ratings['rating'].apply(Decimal)
     return ratings
 
 
